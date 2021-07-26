@@ -5,6 +5,7 @@
 #include <condition_variable>
 #include <thread>
 #include <functional>
+#include <atomic>
 
 namespace async {
 
@@ -26,7 +27,6 @@ class AsyncResponseHandler : public ResponseHandler {
 public:
     explicit AsyncResponseHandler(std::shared_ptr<ResponseHandler> inner_response_handler)
             : inner_response_handler_(std::move(inner_response_handler)) {
-        std::lock_guard lock{mutex_};
         thread_ = std::thread{std::bind(&AsyncResponseHandler::Run, this)};
     }
 
@@ -68,7 +68,7 @@ private:
     std::queue<Response> response_queue_;
     std::mutex mutex_;
     std::condition_variable cv_;
-    bool volatile stop_ = false;
+    std::atomic<bool> stop_ = false;
 };
 
 std::shared_ptr<AsyncResponseHandler>
